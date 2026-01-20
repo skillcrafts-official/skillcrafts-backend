@@ -7,6 +7,13 @@ from rest_framework.exceptions import (
 )
 
 
+PRIVACIES = [
+    ('all', 'видно всем'),
+    ('not_all', 'видно всем, кроме...'),
+    ('no_one_except', 'не видно никому, кроме...'),
+    ('nobody', 'не видно никому')
+]
+
 NOT_AUTHENTICATED = inline_serializer(
     name='NOT_AUTHENTICATED',
     fields={

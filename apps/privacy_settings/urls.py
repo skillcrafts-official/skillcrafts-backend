@@ -10,7 +10,7 @@ from apps.privacy_settings.views import (
 
 urlpatterns = [
     path(
-        'profiles/<int:pk>/privacies/',
+        'my-profile/privacies/',
         ProfilePrivacySettingsView.as_view({
             'get': 'retrieve', 'patch': 'partial_update'
         }),
@@ -22,12 +22,12 @@ urlpatterns = [
     #     name='update_profile_privacy_settings'
     # ),
     path(
-        'profiles/<int:pk>/blacklist/',
+        'my-profile/blacklist/',
         ProfileUserBlacklistView.as_view({'patch': 'update'}),
         name='profile_user_blacklist'
     ),
     path(
-        'profiles/<int:pk>/whitelist/',
+        'my-profile/whitelist/',
         ProfileUserWhitelistView.as_view({'patch': 'update'}),
         name='profile_user_whitelist'
     ),

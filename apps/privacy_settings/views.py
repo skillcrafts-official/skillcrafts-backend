@@ -1,3 +1,5 @@
+from typing import Any
+
 from django.db.models.query import QuerySet
 
 from rest_framework import viewsets
@@ -10,16 +12,21 @@ from apps.privacy_settings.serializers import (
     ProfileUserBlacklistSerializer, ProfileUserWhitelistSerializer
 )
 from apps.privacy_settings.models import ProfilePrivacySettings
+from apps.accounts.permissions import IsAccountOwner
 
 
 class BaseModelViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
+    def get_object(self) -> Any:
+        profile = self.request.user.profile
+        privacies = ProfilePrivacySettings.objects.filter(profile=profile).first()
+        return privacies
+
 
 class ProfilePrivacySettingsView(BaseModelViewSet):
     queryset = ProfilePrivacySettings.objects.all()
     serializer_class = ProfilePrivacySettingsSerializer
-    lookup_field = 'pk'
 
     def retrieve(self, request, *args, **kwargs) -> Response:
         print(self.serializer_class.__dict__)

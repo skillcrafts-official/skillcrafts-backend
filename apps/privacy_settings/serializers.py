@@ -52,7 +52,7 @@ class ProfileUserBlacklistSerializer(serializers.ModelSerializer):
                     instance.blacklist.add(user)
             elif action == 'unblock':
                 if instance.blacklist.filter(id=for_user_id).exists():
-                    instance.blacklist.delete(user)
+                    instance.blacklist.remove(user)
             else:
                 raise ValidationError()
 
@@ -75,7 +75,8 @@ class ProfileUserWhitelistSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProfilePrivacySettings
-        fields = ['action', 'for_user_id', 'success']
+        fields = ['action', 'for_user_id', 'success', 'whitelist']
+        read_only_fields = ['whitelist']
 
     def update(self, instance, validated_data):
         action = validated_data.get('action', None)
@@ -97,7 +98,7 @@ class ProfileUserWhitelistSerializer(serializers.ModelSerializer):
                     instance.whitelist.add(user)
             elif action == 'exclude':
                 if instance.whitelist.filter(id=for_user_id).exists():
-                    instance.whitelist.delete(user)
+                    instance.whitelist.remove(user)
             else:
                 raise ValidationError()
 
