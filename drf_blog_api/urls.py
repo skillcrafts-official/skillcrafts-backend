@@ -33,9 +33,10 @@ urlpatterns = [
         name='swagger-ui'
     ),
     path('auth/', include('apps.authentication.urls')),
+    path('consents/', include('apps.consents.urls')),
     path('users/', include('apps.accounts.urls')),
     path('profiles/', include('apps.profiles.urls')),
-    path('posts/', include('apps.posts.urls')),
+    # path('posts/', include('apps.posts.urls')),
     path('privacy-settings/', include('apps.privacy_settings.urls')),
     path('resume/', include('apps.resume.urls')),
     path('workflows/', include('apps.my_workflows.urls')),

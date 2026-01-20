@@ -95,7 +95,7 @@ INSTALLED_APPS = [
     'mptt',
     # drf apps
     'apps.authentication', 'apps.accounts', 'apps.profiles', 'apps.consents',
-    'apps.posts',
+    # 'apps.posts',
     'apps.privacy_settings', 'apps.media_manage',
     'apps.resume', 'apps.my_workflows', 'apps.my_knowledge',
     # django apps
