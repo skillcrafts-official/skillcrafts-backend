@@ -10,13 +10,60 @@ from drf_spectacular.utils import (
 from drf_spectacular.extensions import OpenApiViewExtension
 
 from apps.profiles.serializers import (
-    ProfileSerializer, UpdateProfileSerializer
+    ProfileSerializer, UpdateProfileSerializer, SkillSerializer
 )
 
 from apps.CONSTANTS import NOT_AUTHENTICATED, PERMISSION_DENIED
+from docs.utils import read_md_section
 
 
-class FixUserProfileViewView(OpenApiViewExtension):
+class FixProfilesView(OpenApiViewExtension):
+    """
+    Фиксируется документация для ProfilesView
+    """
+    target_class = 'apps.profiles.viewsets.ProfilesView'
+
+    def view_replacement(self) -> type[APIView]:
+
+        @extend_schema_view(
+            list=extend_schema(
+                summary="Запрос списка профилей",
+                description=read_md_section(
+                    'api/profiles.md', 'GET /profiles/'
+                ),
+                responses={
+                    status.HTTP_200_OK: ProfileSerializer,
+                    # status.HTTP_401_UNAUTHORIZED: NOT_AUTHENTICATED,
+                    status.HTTP_403_FORBIDDEN: PERMISSION_DENIED
+                },
+            ),
+            education_levels=extend_schema(
+                summary="Список уровней образования",
+                description=read_md_section(
+                    'api/profiles.md', 'GET /profiles/displays/education-levels/'
+                ),
+                responses={
+                    status.HTTP_200_OK: inline_serializer(
+                        name='education_levels_response',
+                        fields={
+                            'level_1': serializers.CharField(),
+                            'level_2': serializers.CharField(),
+                            'levels...': serializers.CharField(),
+                            'level_N': serializers.CharField(),
+                        }
+                    ),
+                    status.HTTP_401_UNAUTHORIZED: NOT_AUTHENTICATED,
+                    status.HTTP_403_FORBIDDEN: PERMISSION_DENIED
+                },
+            ),
+        )
+        class Fixed(self.target_class):  # type: ignore
+            pass
+
+        return Fixed
+
+
+class FixUserProfileView(OpenApiViewExtension):
     """
     Фиксируется документация для UserProfileView
     """
@@ -26,22 +73,20 @@ class FixUserProfileViewView(OpenApiViewExtension):
 
         @extend_schema_view(
             get=extend_schema(
-                summary="Получить профиль пользователя",
-                description=(
-                    "**Требуется аутентификация:** Да  \n"
-                    "**Права:** Для всех авторизованных пользователей"
+                summary="Запрос данных о пользователе",
+                description=read_md_section(
+                    'api/profiles.md', 'GET /profiles/{id}/'
                 ),
                 responses={
                     status.HTTP_200_OK: ProfileSerializer,
-                    # status.HTTP_401_UNAUTHORIZED: NOT_AUTHENTICATED,
+                    status.HTTP_401_UNAUTHORIZED: NOT_AUTHENTICATED,
                     status.HTTP_403_FORBIDDEN: PERMISSION_DENIED
                 },
             ),
             post=extend_schema(
-                summary="Обновить свой профиль",
-                description=(
-                    "**Требуется аутентификация:** Да  \n"
-                    "**Права:** Только для владельца аккаунта"
+                summary="Обновление своего профиля",
+                description=read_md_section(
+                    'api/profiles.md', 'POST /profiles/{id}/'
                 ),
                 request=UpdateProfileSerializer,
                 responses={
@@ -57,11 +102,9 @@ class FixUserProfileViewView(OpenApiViewExtension):
                 },
             ),
             delete=extend_schema(
-                summary="Удалить свой профиль",
-                description=(
-                    "**Требуется аутентификация:** Да  \n"
-                    "**Права:** Только для владельца аккаунта или "
-                    "администратора"
+                summary="Удаление профиля пользователя",
+                description=read_md_section(
+                    'api/profiles.md', 'DELETE /profiles/{id}/'
                 ),
                 responses={
                     status.HTTP_204_NO_CONTENT: OpenApiResponse(),
@@ -76,34 +119,24 @@ class FixUserProfileViewView(OpenApiViewExtension):
         return Fixed
 
 
-class FixRussianEduLevelView(OpenApiViewExtension):
+class FixSkillViewSet(OpenApiViewExtension):
     """
-    Расширяется документация для RussianEduLevelView
+    Расширяется документация для SkillViewSet
     """
-    target_class = 'apps.profiles.viewsets.RussianEduLevelView'
+    target_class = 'apps.profiles.viewsets.SkillViewSet'
 
     def view_replacement(self) -> type[ModelViewSet]:
         @extend_schema_view(
-            retrieve=extend_schema(
+            list=extend_schema(
                 summary="Получить уровень образования",
-                description=(
-                    "Получение уровня образования пользователя.  \n  \n"
-                    "Этот ендпоинт возращает информацию только об "
-                    "уровне образования для компонентов фронтенда "
-                    "типа MultiCheckBox.  \n"
-                    "По умолчанию информация доступна **всем авторизованным** "
-                    "пользователям и гостям. Видимость этого компонента "
-                    "профиля и резюме можно настраивать отдельно."
-                )
-            ),
-            partial_update=extend_schema(
-                summary="Изменить уровень образования",
-                description=(
-                    "Изменение уровня образования  \n  \n"
-                    "Изменение доступно только владельцу аккаунта и "
-                    "только из специального компонента фронтенда "
-                    "типа MultiCheckBox"
-                )
+                description=read_md_section(
+                    'api/profiles.md', 'GET /profiles/displays/skills/'
+                ),
+                responses={
+                    status.HTTP_200_OK: SkillSerializer,
+                    status.HTTP_401_UNAUTHORIZED: NOT_AUTHENTICATED,
+                    status.HTTP_403_FORBIDDEN: PERMISSION_DENIED
+                }
             )
         )
         class Fixed(self.target_class):  # type: ignore
@@ -121,26 +154,87 @@ class FixWorkFormatView(OpenApiViewExtension):
     def view_replacement(self) -> type[ModelViewSet]:
         @extend_schema_view(
             retrieve=extend_schema(
-                summary="Получить список форматов работы",
-                description=(
-                    "Получение списка препочитаемых форматов работы.  \n  \n"
-                    "Этот ендпоинт возращает информацию только о "
-                    "предпочтениях для компонентов фронтенда "
-                    "типа SimpleCheckBox.  \n"
-                    "По умолчанию информация доступна **всем авторизованным** "
-                    "пользователям и гостям. Видимость этого компонента "
-                    "профиля и резюме можно настраивать отдельно."
+                summary="Предпочитаемые форматы работы",
+                description=read_md_section(
+                    'api/profiles.md', 'GET /profiles/{profile}/work_formats/'
                 )
             ),
             partial_update=extend_schema(
-                summary="Изменить список форматов работы",
-                description=(
-                    "Изменение списка форматов работы  \n  \n"
-                    "Изменение доступно только владельцу аккаунта и "
-                    "только из специального компонента фронтенда "
-                    "типа SimpleCheckBox"
+                summary="Изменение форматов работы",
+                description=read_md_section(
+                    'api/profiles.md', 'PATCH /profiles/{profile}/work_formats/'
                 )
             )
+        )
+        class Fixed(self.target_class):  # type: ignore
+            pass
+
+        return Fixed
+
+
+class FixProfileSkillViewSet(OpenApiViewExtension):
+    """
+    Расширяется документация для ProfileSkillViewSet
+    """
+    target_class = 'apps.profiles.viewsets.ProfileSkillViewSet'
+
+    def view_replacement(self) -> type[ModelViewSet]:
+        @extend_schema_view(
+            list=extend_schema(
+                summary="Получение списка навыков",
+                description=read_md_section(
+                    'api/profiles.md', 'GET /profiles/{profile}/skills/'
+                )
+            ),
+            create=extend_schema(
+                summary="Добавление новых навыков",
+                description=read_md_section(
+                    'api/profiles.md', 'POST /profiles/{profile}/skills/'
+                )
+            ),
+            partial_update=extend_schema(
+                summary="Изменение уровня владения навыком",
+                description=read_md_section(
+                    'api/profiles.md',
+                    'PATCH /profiles/{profile}/skills/{skill}/level/'
+                )
+            ),
+            destroy=extend_schema(
+                summary="Удаление навыка из профиля",
+                description=read_md_section(
+                    'api/profiles.md',
+                    'DELETE /profiles/{profile}/skills/{skill}/level/'
+                )
+            )
+        )
+        class Fixed(self.target_class):  # type: ignore
+            pass
+
+        return Fixed
+
+
+class FixPrivacyProfileSkillViewSet(OpenApiViewExtension):
+    """
+    Расширяется документация для PrivacyProfileSkillViewSet
+    """
+    target_class = 'apps.profiles.viewsets.PrivacyProfileSkillViewSet'
+
+    def view_replacement(self) -> type[ModelViewSet]:
+        @extend_schema_view(
+            retrieve=extend_schema(
+                summary="Получение настроек конфиденциальности",
+                description=read_md_section(
+                    'api/profiles.md',
+                    'GET /profiles/{profile}/skills/{skill}/privacy/'
+                )
+            ),
+            partial_update=extend_schema(
+                summary="Изменение настроек конфиденциальности",
+                description=read_md_section(
+                    'api/profiles.md',
+                    'PATCH /profiles/{profile}/skills/{skill}/privacy/'
+                )
+            ),
         )
         class Fixed(self.target_class):  # type: ignore
             pass

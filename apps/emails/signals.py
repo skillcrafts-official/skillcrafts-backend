@@ -15,13 +15,13 @@ def send_email_on_user_creation(sender, instance, created, **kwargs):
     """
     Отправляет письмо с кодом подтверждения при создании пользователя
     """
-    if created and instance.primary_email:
+    if created and instance.email:
         # Проверяем, что email подтверждён (если у вас есть такое поле)
         if not getattr(instance, 'email_verified', False):
             # Отправляем код подтверждения
             result = send_confirmation_email(
-                email=instance.primary_email,
-                username=instance.primary_email
+                email=instance.email,
+                username=instance.email
             )
 
             # Сохраняем код в базе (если нужно)

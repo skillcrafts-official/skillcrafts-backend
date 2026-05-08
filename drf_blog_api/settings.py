@@ -10,10 +10,12 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+from datetime import timedelta
+
 import os
 from pathlib import Path
+from docs.utils import read_md_section
 from dotenv import load_dotenv
-from datetime import timedelta
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -45,11 +47,11 @@ if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-    
+
     # MEDIA URL с HTTPS
-    MEDIA_URL = 'https://portfolio-blog-api.ru/media/'
+    MEDIA_URL = 'https://api.skillcrafts.ru/media/'
     # Или протокол-агностичный
-    # MEDIA_URL = '//portfolio-blog-api.ru/media/'
+    # MEDIA_URL = '//api.skillcrafts.ru/media/'
 else:
     # РАЗРАБОТКА
     MEDIA_URL = '/media/'
@@ -92,7 +94,8 @@ INSTALLED_APPS = [
     'django_cleanup.apps.CleanupConfig',
     'mptt',
     # drf apps
-    'apps.accounts', 'apps.profiles', 'apps.posts',
+    'apps.authentication', 'apps.accounts', 'apps.profiles', 'apps.consents',
+    # 'apps.posts',
     'apps.privacy_settings', 'apps.media_manage',
     'apps.resume', 'apps.my_workflows', 'apps.my_knowledge',
     # django apps
@@ -232,7 +235,7 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         # 'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'apps.accounts.authentication.UnifiedJWTAuthentication',
+        'apps.authentication.authentication.UnifiedJWTAuthentication',
         # 'rest_framework.authentication.SessionAuthentication'
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
@@ -246,41 +249,15 @@ REST_FRAMEWORK = {
     # ]
 }
 
-# SPECTACULAR_SETTINGS = {
-#     "TITLE": "Blog API",  # название проекта
-#     "VERSION": "mvp.2025.12.4",  # версия проекта
-#     "SERVE_INCLUDE_SCHEMA": False,  # исключить эндпоинт /schema
-#     'SORT_OPERATION_PARAMETERS': False,
-#     # TITLE (строка): Заголовок API в документации.
-#     'DESCRIPTION': 'Добавлены ендпоинты для работы с резюме',
-#     # VERSION (строка): Версия API.
-#     # SERVE_INCLUDE_SCHEMA (булево): Включать ли схему OpenAPI в Swagger UI (по умолчанию True).
-#     # SWAGGER_UI_SETTINGS (словарь): Настройки для Swagger UI.
-#     # ENUM_NAME_OVERRIDES (словарь): Настройка имен для элементов перечислений.
-#     'ENUM_NAME_OVERRIDES': {
-#         # Указываем, что все эти поля используют один Enum
-#         'PrivacyEnum': 'apps.privacy_settings.models.PRIVACIES',
-#     }
-#     # SCHEMA_PATH_PREFIX
-#     # Добавьте эти настройки для JWT
-#     # 'SCHEMA_PATH_PREFIX': '/auth/',
-#     # 'COMPONENT_SPLIT_REQUEST': True,
-    
-#     # # Явно укажите методы для токен эндпоинтов
-#     # 'PREPROCESSING_HOOKS': [
-#     #     'drf_spectacular.hooks.preprocess_exclude_path_format',
-#     # ],
-# }
+BASE_URL = {
+    'BASE_URL': 'http://127.0.0.1:8000' if DEBUG else 'https://api.skillcrafts.ru'
+}
 
 SPECTACULAR_SETTINGS = {
     # Основные настройки
-    "TITLE": "Blog API",
-    "VERSION": "mvp.2026.1.1",
-    "DESCRIPTION": (
-        'API для блога с JWT аутентификацией (пользователи + гости)  \n'
-        '22.12.2025 - Добавлено приложение для тайм-менеджмента  \n'
-        '07.01.2026 - Добавлено приложение для знаний'
-    ),
+    "TITLE": "API for SkillCrafts.Ru",
+    "VERSION": "release version 0.1",
+    "DESCRIPTION": read_md_section('api/description.md').format(**BASE_URL),
 
     # Включение схемы безопасности
     "SERVE_INCLUDE_SCHEMA": True,  # Оставьте True для отладки
@@ -303,9 +280,15 @@ SPECTACULAR_SETTINGS = {
 
     # Настройки Swagger UI
     "SWAGGER_UI_SETTINGS": {
-        # "deepLinking": True,
+        'deepLinking': True,  # ← Включить глубокие ссылки
         "persistAuthorization": True,  # Сохраняет авторизацию при перезагрузке
-        # "displayOperationId": False,
+        # "displayOperationId": True,  # Показывать ID операций
+        # "defaultModelsExpandDepth": 1,
+        # "defaultModelExpandDepth": 1,
+        "docExpansion": "list",  # или "list", "full"
+        # "filter": True,
+        # "showExtensions": True,
+        "showCommonExtensions": True, # "displayOperationId": False,
         # "defaultModelsExpandDepth": 1,
         # "defaultModelExpandDepth": 1,
         # "defaultModelRendering": "model",

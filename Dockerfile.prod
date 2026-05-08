@@ -30,7 +30,7 @@ RUN pip install --upgrade pip && \
 # 3. Удаляем build-зависимости (уменьшаем размер образа)
 # RUN apk del .build-deps
 
-# 4. Копируем ТОЛЬКО нужные файлы (используйте .dockerignore)
+# 4. Копируем ТОЛЬКО нужные файлы (используется .dockerignore)
 COPY . .
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \

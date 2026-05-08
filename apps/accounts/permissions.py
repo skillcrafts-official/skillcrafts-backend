@@ -74,6 +74,11 @@ class IsAdminOnly(BasePermissionWithType):
         return self.get_user_type(request.user) == 'admin'
 
 
+class IsAccountOwner(BasePermissionWithType):
+    def has_permission(self, request, view):
+        return super().has_permission(request, view)
+
+
 # apps/accounts/permissions.py
 class ReadOnly(BasePermissionWithType):
     """

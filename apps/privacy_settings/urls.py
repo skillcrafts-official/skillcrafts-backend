@@ -2,42 +2,33 @@
 from django.urls import path
 
 from apps.privacy_settings.views import (
-    ProfilePrivacySettingsView, UpdateProfilePrivacySettingsView,
-    ProfileUserBlockView, ProfileUserUnblockView,
-    ProfileUserAddView, ProfileUserExcludeView
+    ProfilePrivacySettingsView,
+    ProfileUserBlacklistView, ProfileUserWhitelistView
     # ProfileGetPrivacySettingsView, ProfileSetPrivacySettingsView
 )
 
 
 urlpatterns = [
     path(
-        'profiles/<int:pk>/privacy/',
-        ProfilePrivacySettingsView.as_view({'get': 'retrieve'}),
-        name='get_profile_privacy_settings'
+        'my-profile/privacies/',
+        ProfilePrivacySettingsView.as_view({
+            'get': 'retrieve', 'patch': 'partial_update'
+        }),
+        name='get_or_update_profile_privacy_settings'
+    ),
+    # path(
+    #     'profiles/<int:pk>/privacy/update',
+    #     UpdateProfilePrivacySettingsView.as_view({'patch': 'update'}),
+    #     name='update_profile_privacy_settings'
+    # ),
+    path(
+        'my-profile/blacklist/',
+        ProfileUserBlacklistView.as_view({'patch': 'update'}),
+        name='profile_user_blacklist'
     ),
     path(
-        'profiles/<int:pk>/privacy/update',
-        UpdateProfilePrivacySettingsView.as_view({'patch': 'update'}),
-        name='update_profile_privacy_settings'
-    ),
-    path(
-        'profiles/<int:pk>/blacklist/user/block/',
-        ProfileUserBlockView.as_view({'patch': 'update'}),
-        name='profile_add_user_in_blacklist'
-    ),
-    path(
-        'profiles/<int:pk>/blacklist/user/unblock/',
-        ProfileUserUnblockView.as_view({'patch': 'update'}),
-        name='profile_remove_user_from_blacklist'
-    ),
-    path(
-        'profiles/<int:pk>/whitelist/user/add/',
-        ProfileUserAddView.as_view({'patch': 'update'}),
-        name='profile_add_user_in_blacklist'
-    ),
-    path(
-        'profiles/<int:pk>/whitelist/user/exclude/',
-        ProfileUserExcludeView.as_view({'patch': 'update'}),
-        name='profile_remove_user_from_blacklist'
+        'my-profile/whitelist/',
+        ProfileUserWhitelistView.as_view({'patch': 'update'}),
+        name='profile_user_whitelist'
     ),
 ]

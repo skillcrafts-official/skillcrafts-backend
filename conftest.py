@@ -1,4 +1,7 @@
-"""Global conftest.py"""
+"""
+Global conftest.py
+Общие для всех уровней тестов фабрики фикстур
+"""
 
 import tempfile
 import shutil
@@ -10,6 +13,7 @@ from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
 
+# собираем все conftest воедино
 pytest_plugins = [
     'apps.accounts.tests.conftest',
     'apps.profiles.tests.conftest',

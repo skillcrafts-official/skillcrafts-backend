@@ -8,13 +8,7 @@ from rest_framework.exceptions import NotFound
 from apps.profiles.models import Profile
 from apps.accounts.models import User
 
-
-PRIVACIES = [
-    ('all', 'видно всем'),
-    ('not_all', 'всем, кроме...'),
-    ('not_nobody', 'никому, кроме'),
-    ('nobody', 'никому')
-]
+from apps.CONSTANTS import PRIVACIES
 
 
 class ProfilePrivacySettings(models.Model):
@@ -22,61 +16,61 @@ class ProfilePrivacySettings(models.Model):
     Модель для настройки доступа к информации о пользователе
     """
     first_name = models.CharField(
-        choices=PRIVACIES, max_length=10, default='all'
+        choices=PRIVACIES, max_length=20, default='all'
     )
     middle_name = models.CharField(
-        choices=PRIVACIES, max_length=10, default='all'
+        choices=PRIVACIES, max_length=20, default='all'
     )
     last_name = models.CharField(
-        choices=PRIVACIES, max_length=10, default='all'
+        choices=PRIVACIES, max_length=20, default='all'
     )
     profession = models.CharField(
-        choices=PRIVACIES, max_length=10, default='all'
+        choices=PRIVACIES, max_length=20, default='all'
     )
     city = models.CharField(
-        choices=PRIVACIES, max_length=10, default='all'
+        choices=PRIVACIES, max_length=20, default='all'
     )
     country = models.CharField(
-        choices=PRIVACIES, max_length=10, default='all'
+        choices=PRIVACIES, max_length=20, default='all'
     )
     relocation = models.CharField(
-        choices=PRIVACIES, max_length=10, default='all'
+        choices=PRIVACIES, max_length=20, default='all'
     )
     work_formats = models.CharField(
-        choices=PRIVACIES, max_length=10, default='all'
+        choices=PRIVACIES, max_length=20, default='all'
     )
     edu_level = models.CharField(
-        choices=PRIVACIES, max_length=10, default='all'
+        choices=PRIVACIES, max_length=20, default='all'
     )
     institution_name = models.CharField(
-        choices=PRIVACIES, max_length=10, default='all'
+        choices=PRIVACIES, max_length=20, default='all'
     )
     graduation_year = models.CharField(
-        choices=PRIVACIES, max_length=10, default='all'
+        choices=PRIVACIES, max_length=20, default='all'
     )
     short_desc = models.CharField(
-        choices=PRIVACIES, max_length=10, default='all'
+        choices=PRIVACIES, max_length=20, default='all'
     )
     full_desc = models.CharField(
-        choices=PRIVACIES, max_length=10, default='all'
+        choices=PRIVACIES, max_length=20, default='all'
     )
     wallpaper = models.CharField(
-        choices=PRIVACIES, max_length=10, default='all'
+        choices=PRIVACIES, max_length=20, default='all'
     )
     avatar = models.CharField(
-        choices=PRIVACIES, max_length=10, default='all'
+        choices=PRIVACIES, max_length=20, default='all'
     )
     link_to_instagram = models.CharField(
-        choices=PRIVACIES, max_length=10, default='all'
+        choices=PRIVACIES, max_length=20, default='all'
     )
     link_to_telegram = models.CharField(
-        choices=PRIVACIES, max_length=10, default='all'
+        choices=PRIVACIES, max_length=20, default='all'
     )
     link_to_github = models.CharField(
-        choices=PRIVACIES, max_length=10, default='all'
+        choices=PRIVACIES, max_length=20, default='all'
     )
     link_to_vk = models.CharField(
-        choices=PRIVACIES, max_length=10, default='all'
+        choices=PRIVACIES, max_length=20, default='all'
     )
 
     profile = models.OneToOneField(

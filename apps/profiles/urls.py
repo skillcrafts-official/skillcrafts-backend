@@ -28,15 +28,17 @@ urlpatterns = [
         name='get_profile_skills'
     ),
     path(
-        '<int:profile>/skills/<int:skill>/',
+        '<int:profile>/skills/<int:skill>/level/',
         ProfileSkillViewSet.as_view({
             'patch': 'partial_update', 'delete': 'destroy'
         }),
         name='destroy_profile_skill'
     ),
     path(
-        '<int:profile>/skills/<int:skill>/privacies/',
-        PrivacyProfileSkillViewSet.as_view({'get': 'retrieve', 'put': 'update'}),
+        '<int:profile>/skills/<int:skill>/privacy/',
+        PrivacyProfileSkillViewSet.as_view({
+            'get': 'retrieve', 'patch': 'partial_update'
+        }),
         name='update_skill_privacy_setting'
     ),
     path(

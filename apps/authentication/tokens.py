@@ -80,7 +80,7 @@ class CustomAccessToken(AccessToken):
 
         # Наши кастомные поля
         token['type'] = 'user'
-        token['email'] = user.primary_email if hasattr(user, 'primary_email') else user.email
+        token['email'] = user.email
 
         if user.is_staff:
             token['group'] = 'admin'
@@ -157,7 +157,9 @@ class CustomRefreshToken(RefreshToken):
         Устанавливаем срок действия токена.
         """
         if lifetime is None:
-            lifetime = settings.SIMPLE_JWT.get('REFRESH_TOKEN_LIFETIME', timedelta(days=7))
+            lifetime = settings.SIMPLE_JWT.get(
+                'REFRESH_TOKEN_LIFETIME', timedelta(days=7)
+            )
 
         if from_time is None:
             from_time = datetime.utcnow()
@@ -179,7 +181,7 @@ class CustomRefreshToken(RefreshToken):
 
         # Наши кастомные поля
         token['type'] = 'user'
-        token['email'] = user.primary_email if hasattr(user, 'primary_email') else user.email
+        token['email'] = user.email
 
         if user.is_staff:
             token['group'] = 'admin'

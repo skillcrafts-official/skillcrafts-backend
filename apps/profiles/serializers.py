@@ -64,8 +64,10 @@ class ProfileSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
 
         request = self.context.get('request')
+        request_user = request.user
+        instance_user = instance.user
 
-        if request and request.user.id != instance.user.id:
+        if request and request_user.id != instance_user.id:
             try:
                 privacy_settings = (
                     ProfilePrivacySettings.objects
@@ -74,18 +76,48 @@ class ProfileSerializer(serializers.ModelSerializer):
             except ProfilePrivacySettings.DoesNotExist:
                 return representation
 
-            for field_name in representation.keys():
+            blacklist = getattr(privacy_settings, 'blacklist', [])
+            whitelist = getattr(privacy_settings, 'whitelist', [])
+
+            blacklist = list(blacklist.values_list('id', flat=True))
+            whitelist = list(whitelist.values_list('id', flat=True))
+
+            for field_name in list(representation.keys()):
                 if field_name in ('id', 'user'):
                     continue
 
                 access_level = getattr(privacy_settings, field_name, 'all')
 
-                mask_value = '' if field_name in ('avatar', 'wallpaper') else '*****'
+                if access_level == 'all':
+                    continue
 
-                if access_level != 'all' and not request.user.is_authenticated:
-                    representation[field_name] = mask_value
-                elif access_level == 'nobody' and request.user.is_authenticated:
-                    representation[field_name] = mask_value
+                if access_level == 'not_all':
+                    if all((
+                        request_user.is_authenticated,
+                        request_user.id not in blacklist
+                    )):
+                        continue
+                    representation.pop(field_name)
+                    continue
+
+                if access_level == 'no_one_except':
+                    if all((
+                        request_user.is_authenticated,
+                        request_user.id in whitelist,
+                        request_user.id not in blacklist
+                    )):
+                        continue
+                    representation.pop(field_name)
+                    continue
+
+                representation.pop(field_name)
+
+                # mask_value = '' if field_name in ('avatar', 'wallpaper') else '*****'
+
+                # if access_level != 'all' and not request.user.is_authenticated:
+                #     representation[field_name] = mask_value
+                # elif access_level == 'nobody' and request.user.is_authenticated:
+                #     representation[field_name] = mask_value
 
             return representation
 

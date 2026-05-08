@@ -1,3 +1,5 @@
+from typing import Any
+
 from django.db.models.query import QuerySet
 
 from rest_framework import viewsets
@@ -6,54 +8,38 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.privacy_settings.serializers import (
-    ProfilePrivacySettingsSerializer, UpdateProfilePrivacySettingsSerializer,
-    ProfileUserBlockSerializer, ProfileUserUnblockSerializer,
-    ProfileUserAddSerializer, ProfileUserExcludeSerializer
+    ProfilePrivacySettingsSerializer,
+    ProfileUserBlacklistSerializer, ProfileUserWhitelistSerializer
 )
 from apps.privacy_settings.models import ProfilePrivacySettings
+from apps.accounts.permissions import IsAccountOwner
 
 
 class BaseModelViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
+    def get_object(self) -> Any:
+        profile = self.request.user.profile
+        privacies = ProfilePrivacySettings.objects.filter(profile=profile).first()
+        return privacies
+
 
 class ProfilePrivacySettingsView(BaseModelViewSet):
     queryset = ProfilePrivacySettings.objects.all()
     serializer_class = ProfilePrivacySettingsSerializer
+
+    def retrieve(self, request, *args, **kwargs) -> Response:
+        print(self.serializer_class.__dict__)
+        return super().retrieve(request, *args, **kwargs)
+
+
+class ProfileUserBlacklistView(BaseModelViewSet):
+    queryset = ProfilePrivacySettings.objects.all()
+    serializer_class = ProfileUserBlacklistSerializer
     lookup_field = 'pk'
 
 
-class UpdateProfilePrivacySettingsView(BaseModelViewSet):
+class ProfileUserWhitelistView(BaseModelViewSet):
     queryset = ProfilePrivacySettings.objects.all()
-    serializer_class = UpdateProfilePrivacySettingsSerializer
-    lookup_field = 'pk'
-
-    def update(self, request, *args, **kwargs) -> Response:
-        user = request.user
-        if user.pk != kwargs['pk']:
-            raise PermissionDenied()
-        return super().update(request, *args, **kwargs)
-
-
-class ProfileUserBlockView(BaseModelViewSet):
-    queryset = ProfilePrivacySettings.objects.all()
-    serializer_class = ProfileUserBlockSerializer
-    lookup_field = 'pk'
-
-
-class ProfileUserUnblockView(BaseModelViewSet):
-    queryset = ProfilePrivacySettings.objects.all()
-    serializer_class = ProfileUserUnblockSerializer
-    lookup_field = 'pk'
-
-
-class ProfileUserAddView(BaseModelViewSet):
-    queryset = ProfilePrivacySettings.objects.all()
-    serializer_class = ProfileUserAddSerializer
-    lookup_field = 'pk'
-
-
-class ProfileUserExcludeView(BaseModelViewSet):
-    queryset = ProfilePrivacySettings.objects.all()
-    serializer_class = ProfileUserExcludeSerializer
+    serializer_class = ProfileUserWhitelistSerializer
     lookup_field = 'pk'

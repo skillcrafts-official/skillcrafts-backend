@@ -1,6 +1,7 @@
 """Расширение автоматически сгенерированной документации"""
 # pylint: disable=no-member,inherit-non-class,unnecessary-pass
 
+from django.forms import IntegerField
 from rest_framework.exceptions import status  # type: ignore
 from rest_framework import serializers
 from rest_framework.viewsets import ModelViewSet
@@ -14,74 +15,60 @@ from drf_spectacular.utils import (
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.extensions import OpenApiViewExtension
 
-from apps.accounts.serializers import UserSerializer, EmailConfirmSerializer, MyTokenObtainPairSerializer
+from apps.accounts.serializers import (
+    EmailConfirmSerializer, UserSerializer
+)
 
-from apps.CONSTANTS import NOT_AUTHENTICATED, PERMISSION_DENIED
-
-from drf_spectacular.extensions import OpenApiAuthenticationExtension
-
-
-class UnifiedJWTAuthenticationScheme(OpenApiAuthenticationExtension):
-    """
-    Расширение для drf-spectacular для поддержки UnifiedJWTAuthentication
-    """
-    target_class = 'apps.accounts.authentication.UnifiedJWTAuthentication'
-    name = 'JWTAuth'  # Это имя должно совпадать с SECURITY_DEFINITIONS в настройках
-
-    def get_security_definition(self, auto_schema):
-        return {
-            'type': 'http',
-            'scheme': 'bearer',
-            'bearerFormat': 'JWT',
-            'description': 'JWT Bearer Token для аутентификации пользователей и гостей'
-        }
+from apps.CONSTANTS import BAD_REQUEST, NOT_AUTHENTICATED, PERMISSION_DENIED
+from docs.utils import read_md_section
+from docs.utils import read_md_section
 
 
-class FixUpdateUserEmailView(OpenApiViewExtension):
-    """
-    Фиксируется документация для UpdateUserEmailView
-    """
-    target_class = 'apps.accounts.views.UpdateUserEmailView'
+# class FixUpdateUserEmailView(OpenApiViewExtension):
+#     """
+#     Фиксируется документация для UpdateUserEmailView
+#     """
+#     target_class = 'apps.accounts.views.UpdateUserEmailView'
 
-    def view_replacement(self) -> type[APIView]:
-        @extend_schema_view(
-            post=extend_schema(
-                summary="Добавить новый email",
-                description=(
-                    "Добавление нового email адреса для авторизованного "
-                    "пользователя.  \n  \n"
-                    "**Требуется аутентификация:** Да  \n"
-                    "**Права:** Только для владельца аккаунта"
-                ),
-                responses={
-                    status.HTTP_201_CREATED: inline_serializer(
-                        name='EmailCreated',
-                        fields={
-                            'message': serializers.CharField(),
-                        }
-                    ),
-                    status.HTTP_400_BAD_REQUEST: inline_serializer(
-                        name='EmailBadRequest',
-                        fields={
-                            'message': serializers.CharField(),
-                        }
-                    ),
-                    status.HTTP_401_UNAUTHORIZED: NOT_AUTHENTICATED,
-                    status.HTTP_403_FORBIDDEN: PERMISSION_DENIED,
-                    status.HTTP_409_CONFLICT: inline_serializer(
-                        name='EmailConflict',
-                        fields={
-                            'message': serializers.CharField()
-                        }
-                    ),
-                },
-            )
-        )
-        # pylint: disable=missing-class-docstring
-        class Fixed(self.target_class):  # type: ignore
-            pass
+#     def view_replacement(self) -> type[APIView]:
+#         @extend_schema_view(
+#             post=extend_schema(
+#                 summary="Добавить новый email",
+#                 description=(
+#                     "Добавление нового email адреса для авторизованного "
+#                     "пользователя.  \n  \n"
+#                     "**Требуется аутентификация:** Да  \n"
+#                     "**Права:** Только для владельца аккаунта"
+#                 ),
+#                 responses={
+#                     status.HTTP_201_CREATED: inline_serializer(
+#                         name='EmailCreated',
+#                         fields={
+#                             'message': serializers.CharField(),
+#                         }
+#                     ),
+#                     status.HTTP_400_BAD_REQUEST: inline_serializer(
+#                         name='EmailBadRequest',
+#                         fields={
+#                             'message': serializers.CharField(),
+#                         }
+#                     ),
+#                     status.HTTP_401_UNAUTHORIZED: NOT_AUTHENTICATED,
+#                     status.HTTP_403_FORBIDDEN: PERMISSION_DENIED,
+#                     status.HTTP_409_CONFLICT: inline_serializer(
+#                         name='EmailConflict',
+#                         fields={
+#                             'message': serializers.CharField()
+#                         }
+#                     ),
+#                 },
+#             )
+#         )
+#         # pylint: disable=missing-class-docstring
+#         class Fixed(self.target_class):  # type: ignore
+#             pass
 
-        return Fixed
+#         return Fixed
 
 
 class FixUpdateUserPasswordView(OpenApiViewExtension):
@@ -92,27 +79,20 @@ class FixUpdateUserPasswordView(OpenApiViewExtension):
 
     def view_replacement(self) -> type[APIView]:
         @extend_schema_view(
-            put=extend_schema(
-                summary="Изменить текущий пароль",
-                description=(
-                    "Изменение пароля для авторизованного "
-                    "пользователя.  \n  \n"
-                    "**Требуется аутентификация:** Да  \n"
-                    "**Права:** Только для владельца аккаунта"
+            patch=extend_schema(
+                summary="Процедура изменения пароля",
+                description=read_md_section(
+                    'api/accounts.md', 'PATCH /users/password/'
                 ),
                 responses={
                     status.HTTP_200_OK: inline_serializer(
                         name='PasswordUpdated',
                         fields={
                             'message': serializers.CharField(),
+                            'success': serializers.BooleanField(),
                         }
                     ),
-                    status.HTTP_400_BAD_REQUEST: inline_serializer(
-                        name='PasswordValidationError',
-                        fields={
-                            'message': serializers.CharField(),
-                        }
-                    ),
+                    status.HTTP_400_BAD_REQUEST: BAD_REQUEST,
                     status.HTTP_401_UNAUTHORIZED: NOT_AUTHENTICATED,
                     status.HTTP_403_FORBIDDEN: PERMISSION_DENIED,
                     status.HTTP_409_CONFLICT: inline_serializer(
@@ -141,24 +121,16 @@ class FixUserView(OpenApiViewExtension):
 
         @extend_schema_view(
             list=extend_schema(
-                summary="Получить всех пользователей",
-                description=(
-                    "Выдаётся списко всех активных "
-                    "подтверждённых пользователей  \n  \n"
-                    "**Доступно всем зарегистрированным пользователям**"
-                ),
+                summary="Получение списка пользователей",
+                description=read_md_section('api/accounts.md', 'GET /users/'),
                 responses={
                     status.HTTP_200_OK: UserSerializer,
                     status.HTTP_401_UNAUTHORIZED: NOT_AUTHENTICATED
                 }
             ),
             retrieve=extend_schema(
-                summary="Получить данные пользователя",
-                description=(
-                    "Получение данных аутентификации пользователя "
-                    "(кроме пароля)  \n  \n"
-                    "**Пока доступно всем, но в будущем только Админам**"
-                ),
+                summary="Получение данных пользователя",
+                description=read_md_section('api/accounts.md', 'GET /users/{id}/'),
                 parameters=[
                     OpenApiParameter(
                        name="id",
@@ -170,11 +142,8 @@ class FixUserView(OpenApiViewExtension):
                 ],
             ),
             create=extend_schema(
-                summary="Зарегистрировать нового пользователя",
-                description=(
-                    "Регистрация новых пользователей  \n  \n"
-                    "**Публичный метод, доступен всем**"
-                )
+                summary="Процедура регистрации пользователя",
+                description=read_md_section('api/accounts.md', 'POST /users/')
             )
         )
         # pylint: disable=missing-class-docstring
@@ -184,92 +153,57 @@ class FixUserView(OpenApiViewExtension):
         return Fixed
 
 
-# class FixEmailConfirmView(OpenApiViewExtension):
-#     """
-#     Фиксируется документация для EmailConfirmView
-#     """
-#     target_class = 'apps.accounts.views.EmailConfirmView'
-
-#     def view_replacement(self) -> type[ModelViewSet]:
-
-#         @extend_schema_view(
-#             update=extend_schema(
-#                 summary="Подтвердить пользователя",
-#                 description=(
-#                     "Подтверждение регистрации пользователя "
-#                     "через код отправленный на указанный Email  \n  \n"
-#                     "**Публичный метод, доступен всем**"
-#                 ),
-#                 request=EmailConfirmSerializer
-#             )
-#         )
-#         # pylint: disable=missing-class-docstring
-#         class Fixed(self.target_class):  # type: ignore
-#             pass
-
-#         return Fixed
-
-
-class FixMyTokenObtainPairView(OpenApiViewExtension):
+class FixEmailConfirmView(OpenApiViewExtension):
     """
-    Фиксирует расширение документации для MyTokenObtainPairView
+    Фиксируется документация для EmailConfirmView
     """
-    target_class = 'apps.accounts.views.MyTokenObtainPairView'
+    target_class = 'apps.accounts.views.EmailConfirmView'
 
-    def view_replacement(self) -> type[GenericAPIView]:
+    def view_replacement(self) -> type[APIView]:
 
         @extend_schema_view(
-            post=extend_schema(
-                summary="Получить токены",
-                description="JWT авторизация пользователя",
-                # request=MyTokenObtainPairSerializer,
-                request=inline_serializer(
-                    name='getJWT',
-                    fields={
-                        'primary_email': serializers.EmailField(),
-                        'password': serializers.CharField()
-                    }
+            get=extend_schema(
+                summary="Получение кода подтверждения email",
+                description=read_md_section(
+                    'api/accounts.md', 'GET /users/email/confirm'
                 ),
-            )
-        )
-        # pylint: disable=missing-class-docstring
-        class Fixed(self.target_class):  # type: ignore
-            pass
-
-        return Fixed
-
-
-class FixTokenRefreshView(OpenApiViewExtension):
-    """
-    Фиксирует расширение документации для TokenRefreshView
-    """
-    target_class = 'rest_framework_simplejwt.views.TokenRefreshView'
-
-    def view_replacement(self) -> type[GenericAPIView]:
-
-        @extend_schema_view(
+                parameters=[
+                    OpenApiParameter(
+                        name='email',
+                        type=str,
+                        location=OpenApiParameter.QUERY,  # ← как параметр URL
+                        required=True
+                    )
+                ],
+                responses={
+                    status.HTTP_200_OK: inline_serializer(
+                        name='email_code_response',
+                        fields={
+                            'message': serializers.CharField(
+                                default='Код подтверждения email отправлен на почту!'
+                            )
+                        }
+                    ),
+                    status.HTTP_400_BAD_REQUEST: BAD_REQUEST,
+                }
+            ),
             post=extend_schema(
-                summary="Обновить токены",
-            )
-        )
-        # pylint: disable=missing-class-docstring
-        class Fixed(self.target_class):  # type: ignore
-            pass
-
-        return Fixed
-
-
-class FixTokenVerifyView(OpenApiViewExtension):
-    """
-    Фиксирует расширение документации для TokenVerifyView
-    """
-    target_class = 'rest_framework_simplejwt.views.TokenVerifyView'
-
-    def view_replacement(self) -> type[GenericAPIView]:
-
-        @extend_schema_view(
-            post=extend_schema(
-                summary="Проверить токены",
+                summary="Процедура подтверждения email",
+                description=read_md_section(
+                    'api/accounts.md', 'POST /users/email/confirm'
+                ),
+                request=EmailConfirmSerializer,
+                responses={
+                    status.HTTP_200_OK: inline_serializer(
+                        name='email_confirmation',
+                        fields={
+                            'verification': serializers.CharField(
+                                default='passed/failed'
+                            )
+                        }
+                    ),
+                    status.HTTP_400_BAD_REQUEST: BAD_REQUEST,
+                }
             )
         )
         # pylint: disable=missing-class-docstring

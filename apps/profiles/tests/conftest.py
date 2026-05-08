@@ -2,7 +2,6 @@
 # pylint: disable=redefined-outer-name
 
 import pytest
-from dataclasses import dataclass
 from faker import Faker
 
 
