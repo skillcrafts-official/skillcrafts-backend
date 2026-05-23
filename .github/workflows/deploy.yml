@@ -148,7 +148,7 @@ jobs:
           cd ..
           # Отправляем через API allure-docker-service
           # Подробнее: https://github.com/fescobar/allure-docker-service#send-results
-          curl -X POST "$ALLURE_SERVER_URL/api/result" \
+          curl -X POST "$ALLURE_SERVER_URL/allure-docker-service/send-results" \
                -u "$ALLURE_USER:$ALLURE_PASSWORD" \
                -H "accept: */*" \
                -H "Content-Type: multipart/form-data" \
