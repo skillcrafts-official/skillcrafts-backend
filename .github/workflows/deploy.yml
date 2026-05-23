@@ -103,7 +103,7 @@ jobs:
           # Запускаем контейнер, монтируя папку с тестами и папку для результатов
           # Предполагаем, что рабочая директория в контейнере /app, а тесты лежат в ./tests
           docker run --rm \
-            -v ${{ github.workspace }}/tests:/app/tests \
+            # -v ${{ github.workspace }}/tests:/app/tests \
             -v ${{ github.workspace }}/allure-results:/app/allure-results \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
             pytest /app/tests --alluredir=/app/allure-results
