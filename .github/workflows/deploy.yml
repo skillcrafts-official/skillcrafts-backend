@@ -116,7 +116,7 @@ jobs:
         run: |
           mkdir -p allure-results
           docker run --rm \
-            --network ${{ job.services.postgres.network }} \   # важно, чтобы контейнер видел сервис
+            --network ${{ job.services.postgres.network }} \
             -e DATABASE_URL="$DATABASE_URL" \
             -e DB_HOST=postgres \
             -e DB_PORT=5432 \
