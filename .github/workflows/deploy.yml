@@ -74,6 +74,68 @@ jobs:
             VCS_REF=${{ github.sha }}
             VERSION=${{ github.ref_name }}
 
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    if: ${{ needs.build.result == 'success' }}
+    steps:
+      - name: Checkout code (нужны тесты из репозитория)
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull Docker image
+        run: docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Run tests inside container
+        run: |
+          # Создаём временную директорию для результатов на хосте
+          mkdir -p allure-results
+          # Запускаем контейнер, монтируя папку с тестами и папку для результатов
+          # Предполагаем, что рабочая директория в контейнере /app, а тесты лежат в ./tests
+          docker run --rm \
+            -v ${{ github.workspace }}/tests:/app/tests \
+            -v ${{ github.workspace }}/allure-results:/app/allure-results \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
+            pytest /app/tests --alluredir=/app/allure-results
+        continue-on-error: true   # чтобы даже при падении тестов мы сохранили артефакт
+
+      - name: Upload allure-results as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results
+          path: allure-results
+
+      - name: Send results to Allure server
+        if: always()   # отправляем в любом случае – отчёт о падении тоже полезен
+        env:
+          ALLURE_SERVER_URL: ${{ secrets.ALLURE_SERVER_URL }}
+          ALLURE_USER: ${{ secrets.ALLURE_USER }}
+          ALLURE_PASSWORD: ${{ secrets.ALLURE_PASSWORD }}
+          ALLURE_PROJECT_ID: 'default'
+        run: |
+          # Упаковываем результаты в zip
+          cd allure-results
+          zip -r ../allure-results.zip .
+          cd ..
+          # Отправляем через API allure-docker-service
+          # Подробнее: https://github.com/fescobar/allure-docker-service#send-results
+          curl -X POST "$ALLURE_SERVER_URL/api/result" \
+               -u "$ALLURE_USER:$ALLURE_PASSWORD" \
+               -H "accept: */*" \
+               -H "Content-Type: multipart/form-data" \
+               -F "file=@allure-results.zip;type=application/zip" \
+               -F "project_id=$ALLURE_PROJECT_ID"
+
+      - name: Fail job if tests failed
+        if: steps.tests.outcome == 'failure'
+        run: exit 1
+
   deploy:
     runs-on: ubuntu-latest
     needs: build
