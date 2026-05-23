@@ -3,7 +3,7 @@
 
 import pytest
 
-from apps.accounts.models import User, Email
+from apps.accounts.models import User
 
 
 @pytest.fixture
