@@ -80,6 +80,20 @@ jobs:
     permissions:
       contents: read
       packages: read
+    services:
+      postgres:
+        image: postgres:15          # или ваша версия
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     if: ${{ needs.build.result == 'success' }}
     steps:
       - name: Checkout code (нужны тесты из репозитория)
@@ -97,15 +111,21 @@ jobs:
 
       - name: Run tests inside container
         id: tests
+        env:
+          DATABASE_URL: postgres://test_user:test_password@postgres:5432/test_db
         run: |
-          # Создаём временную директорию для результатов на хосте
           mkdir -p allure-results
-          # Запускаем контейнер, монтируя папку с тестами и папку для результатов
-          # Предполагаем, что рабочая директория в контейнере /app, а тесты лежат в ./tests
           docker run --rm \
+            --network ${{ job.services.postgres.network }} \   # важно, чтобы контейнер видел сервис
+            -e DATABASE_URL="$DATABASE_URL" \
+            -e DB_HOST=postgres \
+            -e DB_PORT=5432 \
+            -e DB_NAME=test_db \
+            -e DB_USER=test_user \
+            -e DB_PASSWORD=test_password \
             -v ${{ github.workspace }}/allure-results:/app/allure-results \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
-            pytest --alluredir=/app/allure-results
+            sh -c "python manage.py migrate --noinput && pytest --alluredir=/app/allure-results"
         continue-on-error: true   # чтобы даже при падении тестов мы сохранили артефакт
 
       - name: Upload allure-results as artifact
