@@ -138,8 +138,8 @@ jobs:
         if: always()   # отправляем в любом случае – отчёт о падении тоже полезен
         env:
           ALLURE_SERVER_URL: ${{ secrets.ALLURE_SERVER_URL }}
-          ALLURE_USER: ${{ secrets.ALLURE_USER }}
-          ALLURE_PASSWORD: ${{ secrets.ALLURE_PASSWORD }}
+          # ALLURE_USER: ${{ secrets.ALLURE_USER }}
+          # ALLURE_PASSWORD: ${{ secrets.ALLURE_PASSWORD }}
           ALLURE_PROJECT_ID: 'default'
         run: |
           # Упаковываем результаты в zip
